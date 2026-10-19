@@ -91,7 +91,7 @@ function showToast(message, isError = false) {
     el.toast.textContent = message;
     el.toast.className = 'toast show ' + (isError ? 'error' : 'success');
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => { el.toast.className = 'toast'; }, CONFIG.TOAST_DURATION_MS);
+    toastTimer = setTimeout(() => { el.toast.className = "toast"; }, isError && message.length > 60 ? 9000 : CONFIG.TOAST_DURATION_MS);
 }
 
 function formatUptime(seconds) {

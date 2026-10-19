@@ -48,8 +48,12 @@ class Settings(BaseSettings):
     silence_duration_ms: int = Field(default=50, ge=50, le=2000)
     generation_temperature: float = Field(default=0.3, ge=0.0, le=2.0)
     text_model: str = Field(
-        default="gemini-2.5-flash",
-        description="Text model used to generate lesson content"
+        default="gemini-flash-latest",
+        description="Text model used to generate lesson content (tried first)"
+    )
+    text_model_fallbacks: str = Field(
+        default="gemini-3-flash-preview,gemini-3.1-flash-lite,gemini-flash-lite-latest",
+        description="Comma-separated models tried in order if the main text model fails"
     )
     instruction_file: Path = Field(default=Path("instructions.txt"))
     phrases_file: Path = Field(default=Path("phrases.json"))
@@ -455,7 +459,7 @@ class TenantState:
         self.tenant_id = tenant_id
         self._system_instructions: str = ""
         self._is_muted: bool = False
-        self._current_voice: str = "Zephyr"  # Default voice
+        self._current_voice: str = "Charon"  # Default voice (male)
         self._connections: MutableMapping[WebSocket, asyncio.Queue[dict]] = {}
         self.lesson: LessonState | None = None
     
@@ -1508,22 +1512,34 @@ async def _lesson_generate(req: LessonGenerateRequest) -> LessonGenerateResponse
     if error:
         return LessonGenerateResponse(status="error", message=error)
     prompt = build_generation_prompt(req.mode, req.subject.strip(), req.lesson.strip(), req.duration)
-    try:
-        response = await tenant_manager.genai_client.aio.models.generate_content(
-            model=settings.text_model,
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                system_instruction=GENERATION_SYSTEM_PROMPT,
-                temperature=0.8,
-            ),
-        )
-        content = clean_generated_content(response.text or "")
-    except Exception as e:
-        logger.error(f"Lesson generation failed: {type(e).__name__}: {e}")
-        return LessonGenerateResponse(status="error", message="تعذّر توليد المحتوى، حاول مرة أخرى")
-    if not content:
-        return LessonGenerateResponse(status="error", message="لم يُرجع النموذج محتوى، حاول مرة أخرى")
-    return LessonGenerateResponse(content=content, parts=len(split_segments(content)))
+    models = [settings.text_model] + [
+        m.strip() for m in settings.text_model_fallbacks.split(",") if m.strip()
+    ]
+    models = list(dict.fromkeys(models))  # de-duplicate, keep order
+    last_error = ""
+    for model in models:
+        try:
+            response = await tenant_manager.genai_client.aio.models.generate_content(
+                model=model,
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    system_instruction=GENERATION_SYSTEM_PROMPT,
+                    temperature=0.8,
+                ),
+            )
+            content = clean_generated_content(response.text or "")
+        except Exception as e:
+            last_error = f"{type(e).__name__}: {e}"
+            logger.error(f"Lesson generation failed with {model}: {last_error}")
+            continue
+        if content:
+            logger.info("Lesson generated", extra={"extra": {"model": model, "chars": len(content)}})
+            return LessonGenerateResponse(content=content, parts=len(split_segments(content)))
+        last_error = f"{model}: empty response"
+    return LessonGenerateResponse(
+        status="error",
+        message=f"تعذّر توليد المحتوى. السبب: {last_error[:300]}",
+    )
 
 
 async def _lesson_start(tenant: TenantState, req: LessonStartRequest) -> AdminResponse:

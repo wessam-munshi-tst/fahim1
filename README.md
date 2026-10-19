@@ -29,7 +29,7 @@ venv/bin/uvicorn main:app --reload --port 8000 --host 172.17.0.1
 
 1. Pick an activity: شرح للمادة / أسئلة / قصة وحوار / ترحيب وتفاعل.
 2. Enter the subject and lesson name, pick 5, 10 or 15 minutes, then press موافق.
-3. Gemini (`TEXT_MODEL`, default `gemini-2.5-flash`) writes the content split into parts by `---` lines. You can edit it.
+3. Gemini (`TEXT_MODEL`, default `gemini-flash-latest`, with `TEXT_MODEL_FALLBACKS`) writes the content split into parts by `---` lines. You can edit it.
 4. Press "ابدأ الحصة على الروبوت". The robot delivers one part at a time, pauses for students, answers their questions, and wraps up when the parts or the time run out.
 
 Quick phrases are managed from the "إدارة العبارات" window and stored in `phrases.json` (per tenant folder).
@@ -45,7 +45,8 @@ Environment variables (`.env`):
 | `SAMPLE_RATE` | `24000` | Audio sample rate (Hz) |
 | `SILENCE_DURATION_MS` | `50` | VAD silence duration |
 | `GENERATION_TEMPERATURE` | `0.3` | Response creativity |
-| `TEXT_MODEL` | `gemini-2.5-flash` | Model that writes lesson content |
+| `TEXT_MODEL` | `gemini-flash-latest` | Model that writes lesson content |
+| `TEXT_MODEL_FALLBACKS` | `gemini-3-flash-preview,gemini-3.1-flash-lite,gemini-flash-lite-latest` | Tried in order if the main model fails |
 
 ## API Endpoints
 
