@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="لوحة تحكم الروبوت التعليمي">
+    <meta name="theme-color" content="#4f46e5">
+    <title>Robot Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap">
+    <link rel="stylesheet" href="/static/admin.css">
+</head>
+<body>
+    <div class="app-container">
+        <header class="header">
+            <div class="header-icon" aria-hidden="true">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="4" y="8" width="16" height="12" rx="3"/>
+                    <path d="M12 8V4"/><circle cx="12" cy="3" r="1"/>
+                    <circle cx="9" cy="13.5" r="1.3"/><circle cx="15" cy="13.5" r="1.3"/>
+                    <path d="M9.5 17h5"/><path d="M2 13v2M22 13v2"/>
+                </svg>
+            </div>
+            <div>
+                <h1>لوحة تحكم الروبوت التعليمي</h1>
+                <p class="header-sub">إدارة حصص الحوار الروبوتي لطلاب المدارس</p>
+            </div>
+        </header>
+
+        <!-- Live Stats -->
+        <section class="stats-grid">
+            <div class="stat-card">
+                <span class="stat-value" id="connectionCount">0</span>
+                <span class="stat-label">الأجهزة المتصلة</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value" id="uptime">0s</span>
+                <span class="stat-label">وقت التشغيل</span>
+            </div>
+        </section>
+
+        <!-- Running lesson banner -->
+        <section class="lesson-live" id="lessonLive" hidden>
+            <div class="lesson-live-top">
+                <span class="live-dot" aria-hidden="true"></span>
+                <span class="lesson-live-label" id="lessonLiveLabel">حصة جارية</span>
+                <span class="lesson-live-time" id="lessonLiveTime">00:00</span>
+            </div>
+            <p class="lesson-live-title" id="lessonLiveTitle"></p>
+            <div class="progress" aria-hidden="true"><div class="progress-fill" id="lessonLiveProgress"></div></div>
+            <button class="btn btn-outline-danger btn-sm" id="lessonStopBtn" type="button">إنهاء الحصة</button>
+        </section>
+
+        <!-- Main Controls -->
+        <section class="card">
+            <h2 class="card-title">التحكم السريع</h2>
+            <div class="control-buttons">
+                <button class="btn btn-danger" id="killBtn" type="button">إيقاف فوري</button>
+                <button class="btn btn-toggle" id="muteBtn" type="button">
+                    <span class="btn-text">كتم الصوت</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- Lesson Builder -->
+        <section class="card card-accent">
+            <h2 class="card-title">إعداد الحصة</h2>
+            <p class="card-description">اختر نوع النشاط، ثم اكتب بيانات الدرس واختر المدة ليولّد الروبوت المحتوى.</p>
+
+            <label class="form-label" for="lessonMode">نوع النشاط</label>
+            <select id="lessonMode" class="form-select">
+                <option value="" selected disabled>اختر نوع النشاط...</option>
+                <option value="explain">شرح للمادة</option>
+                <option value="questions">أسئلة</option>
+                <option value="story">قصة وحوار</option>
+                <option value="welcome">ترحيب وتفاعل</option>
+            </select>
+
+            <div class="lesson-form" id="lessonForm" hidden>
+                <label class="form-label" for="lessonSubject">اسم المادة الدراسية</label>
+                <input type="text" id="lessonSubject" class="form-input" placeholder="مثال: العلوم" maxlength="120" autocomplete="off">
+
+                <label class="form-label" for="lessonTitle">اسم الدرس</label>
+                <input type="text" id="lessonTitle" class="form-input" placeholder="مثال: دورة الماء في الطبيعة" maxlength="200" autocomplete="off">
+
+                <fieldset class="duration-group">
+                    <legend class="form-label">مدة حديث الروبوت</legend>
+                    <div class="segmented">
+                        <label><input type="radio" name="lessonDuration" value="5"><span>5 دقائق</span></label>
+                        <label><input type="radio" name="lessonDuration" value="10"><span>10 دقائق</span></label>
+                        <label><input type="radio" name="lessonDuration" value="15"><span>15 دقيقة</span></label>
+                    </div>
+                </fieldset>
+
+                <button class="btn btn-primary" id="lessonOkBtn" type="button">
+                    <span class="spinner" aria-hidden="true"></span>
+                    <span class="btn-label">موافق</span>
+                </button>
+                <p class="hint" id="lessonGenHint" hidden>جاري توليد المحتوى، قد يستغرق ذلك حتى دقيقة...</p>
+            </div>
+
+            <div class="lesson-result" id="lessonResult" hidden>
+                <div class="result-head">
+                    <h3 class="result-title" id="lessonResultTitle">المحتوى المولَّد</h3>
+                    <span class="chip" id="lessonPartsCount">0 أجزاء</span>
+                </div>
+                <textarea id="lessonContent" class="form-textarea form-textarea-large" rows="10"></textarea>
+                <p class="hint">يمكنك تعديل النص قبل البدء. السطر <code>---</code> يفصل بين الأجزاء التي يقدّمها الروبوت واحدًا تلو الآخر.</p>
+                <div class="btn-row">
+                    <button class="btn btn-success" id="lessonStartBtn" type="button">▶ ابدأ الحصة على الروبوت</button>
+                    <button class="btn btn-secondary" id="lessonRegenBtn" type="button">إعادة التوليد</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Voice Selection -->
+        <section class="card">
+            <h2 class="card-title">إعدادات الصوت</h2>
+            <label class="form-label" for="voiceSelect">اختر الصوت</label>
+            <select id="voiceSelect" class="form-select">
+                <option value="">جاري التحميل...</option>
+            </select>
+            <p class="current-voice">الصوت الحالي: <strong id="currentVoice">-</strong></p>
+        </section>
+
+        <!-- Speak Phrases -->
+        <section class="card">
+            <h2 class="card-title">تشغيل عبارة صوتية</h2>
+            <p class="card-description">اختر العبارة ثم اضغط تشغيل، أو أضف عبارات جديدة من نافذة إدارة العبارات.</p>
+            <select id="phraseSelect" class="form-select">
+                <option value="">جاري التحميل...</option>
+            </select>
+            <div class="btn-row">
+                <button class="btn btn-primary" id="speakPhraseBtn" type="button">🔊 تشغيل العبارة</button>
+                <button class="btn btn-secondary" id="managePhrasesBtn" type="button">إدارة العبارات</button>
+            </div>
+        </section>
+
+        <!-- Speak Text -->
+        <section class="card">
+            <h2 class="card-title">إرسال نص للتحدث</h2>
+            <textarea id="speakText" class="form-textarea" placeholder="اكتب النص المراد تشغيله..." rows="3"></textarea>
+            <button class="btn btn-primary" id="speakBtn" type="button">تشغيل النص</button>
+        </section>
+
+        <!-- System Instructions -->
+        <section class="card">
+            <h2 class="card-title">تعليمات النظام</h2>
+            <p class="card-description">تحديث التعليمات سيعيد تشغيل جميع الجلسات. أثناء الحصة يُضاف محتوى الحصة تلقائيًا إلى هذه التعليمات.</p>
+            <textarea id="instructionsText" class="form-textarea form-textarea-large" placeholder="تعليمات النظام..." rows="8"></textarea>
+            <button class="btn btn-primary" id="instructionsBtn" type="button">حفظ التعليمات</button>
+        </section>
+    </div>
+
+    <!-- Phrases manager window -->
+    <dialog id="phrasesDialog" class="sheet" aria-labelledby="phrasesDialogTitle">
+        <div class="sheet-inner">
+            <div class="sheet-head">
+                <h2 id="phrasesDialogTitle">إدارة العبارات</h2>
+                <button class="icon-btn" id="phrasesCloseBtn" type="button" aria-label="إغلاق">✕</button>
+            </div>
+
+            <label class="form-label" for="newPhrase">عبارة جديدة</label>
+            <textarea id="newPhrase" class="form-textarea" rows="2" maxlength="1000" placeholder="اكتب العبارة التي تريد إضافتها للقائمة..."></textarea>
+            <button class="btn btn-secondary" id="addPhraseBtn" type="button">＋ إضافة إلى القائمة</button>
+
+            <div class="phrase-list-head">
+                <span class="form-label">العبارات الحالية</span>
+                <span class="chip" id="phraseCount">0</span>
+            </div>
+            <ul class="phrase-list" id="phraseList"></ul>
+
+            <div class="sheet-foot">
+                <button class="btn btn-primary" id="savePhrasesBtn" type="button">حفظ التغييرات</button>
+                <button class="btn btn-secondary" id="cancelPhrasesBtn" type="button">إلغاء</button>
+            </div>
+        </div>
+    </dialog>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <script src="/static/admin.js"></script>
+</body>
+</html>

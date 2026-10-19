@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Robot Chatbot - Real-time voice interaction powered by AI">
+    <title>الروبوت التعليمي</title>
+    <link rel="preload" href="/static/style.css" as="style">
+    <link rel="preload" href="/static/app.js" as="script">
+    <link rel="preload" href="/static/sm.png" as="image">
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+    <link rel="dns-prefetch" href="https://generativelanguage.googleapis.com">
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="preload" href="/static/bg.jpg" as="image">
+    <style>
+        /* Page background image */
+        body {
+            background: #e9ecef url('/static/bg.jpg') center center / cover no-repeat;
+        }
+        /* Hide the colored blobs so they don't tint the image */
+        body::before, body::after { display: none; }
+    </style>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#ffffff">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap"></noscript>
+</head>
+<body>
+    <button id="fullscreenBtn" aria-label="Toggle fullscreen mode">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2d3436" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+        </svg>
+    </button>
+
+    <div class="container">
+   <div class="visualizer-container" role="img" aria-label="Audio visualizer">
+                <canvas id="visualizer" aria-hidden="true"></canvas>
+            </div>
+    </div>
+    <script src="/static/app.js"></script>
+</body>
+</html>
